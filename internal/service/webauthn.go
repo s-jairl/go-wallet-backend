@@ -1,6 +1,7 @@
 package service
 
 import (
+	"bytes"
 	"context"
 	"crypto/rand"
 	"encoding/base64"
@@ -347,15 +348,13 @@ func (s *WebAuthnService) FinishRegistration(ctx context.Context, req *FinishReg
 		s.logger.Error("Failed to marshal registration credential", zap.Error(err))
 		return nil, ErrVerificationFailed
 	}
-	s.logger.Debug("Normalized registration credential: " + string(debugCredential))
-	
+	s.logger.Debug("Registration credential: " + string(debugCredential))
+
 	normalizedCredential := newCredentialReader(req.Credential)
-	debugNormalizedCredential, err := json.Marshal(normalizedCredential)
-	if err != nil {
-		s.logger.Error("Failed to marshal normalized registration credential", zap.Error(err))
-		return nil, ErrVerificationFailed
-	}
-	s.logger.Debug("Normalized registration credential: " + string(debugNormalizedCredential))
+	normalizedCredentialBuf := new(bytes.Buffer)
+	normalizedCredentialBuf.ReadFrom(normalizedCredential)
+	
+	s.logger.Debug("Normalized registration credential: " + string(normalizedCredentialBuf.Bytes()))
 
 	parsedResponse, err := protocol.ParseCredentialCreationResponseBody(normalizedCredential)
 	if err != nil {

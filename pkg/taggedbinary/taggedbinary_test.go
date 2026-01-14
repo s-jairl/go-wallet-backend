@@ -175,6 +175,19 @@ func TestMustDecodeJSON(t *testing.T) {
 	}
 }
 
+func TestMustDecodeJSON_Nested(t *testing.T) {
+	// Valid JSON with nested tagged binary
+	input := `{"credential": {"rawId": {"$b64u": "SGVsbG8"}}}`
+	got := MustDecodeJSON([]byte(input))
+
+	var obj map[string]map[string]interface{}
+	json.Unmarshal(got, &obj)
+
+	if rawId, ok := obj["credential"]["rawId"].(string); !ok || rawId != "SGVsbG8" {
+		t.Errorf("MustDecodeJSON() did not decode properly")
+	}
+}
+
 func TestTransformReader(t *testing.T) {
 	input := `{"rawId": {"$b64u": "SGVsbG8"}}`
 	reader, err := NewTransformReader([]byte(input))
