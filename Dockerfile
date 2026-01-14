@@ -8,7 +8,7 @@ RUN apk add --no-cache git ca-certificates
 
 # Copy go mod files
 COPY go.mod go.sum ./
-RUN go mod download
+RUN --mount=type=cache,id=gomod,target=/go/pkg/mod go mod download
 
 # Copy source code
 COPY . .
@@ -17,7 +17,9 @@ COPY . .
 ARG VERSION=dev
 ARG COMMIT=unknown
 
-RUN CGO_ENABLED=0 GOOS=linux go build \
+RUN --mount=type=cache,id=gomod,target=/go/pkg/mod \
+    --mount=type=cache,id=gobuild,target=/root/.cache/go-build \
+    CGO_ENABLED=0 GOOS=linux go build \
     -ldflags="-s -w -X main.Version=${VERSION} -X main.Commit=${COMMIT}" \
     -o server cmd/server/main.go
 
