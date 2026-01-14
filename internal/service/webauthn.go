@@ -343,7 +343,12 @@ func (s *WebAuthnService) FinishRegistration(ctx context.Context, req *FinishReg
 
 	// Parse the credential creation response
 	normalizedCredential := newCredentialReader(req.Credential)
-	debugNormalizedCredential, _ := json.Marshal(normalizedCredential)
+	debugNormalizedCredential, err := json.Marshal(normalizedCredential)
+	if err != nil {
+		s.logger.Error("Failed to marshal normalized registration credential", zap.Error(err))
+		return nil, ErrVerificationFailed
+	}
+	
 	s.logger.Debug("Normalized registration credential: " + string(debugNormalizedCredential))
 	parsedResponse, err := protocol.ParseCredentialCreationResponseBody(normalizedCredential)
 	if err != nil {
